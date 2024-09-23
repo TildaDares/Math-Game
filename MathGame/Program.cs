@@ -1,18 +1,25 @@
-﻿// See https://aka.ms/new-console-template for more information
+﻿using System.Diagnostics;
+
 var random = new Random();
 var history = new List<string>();
+var minRange = 1;
+var maxRange = 100;
+const string WON = "Won";
+const string LOST = "Lost";
 
 void Menu()
 {
     do
     {
         Console.WriteLine("Welcome to Math Game!");
-        Console.WriteLine("Pick an option from the menu below. Select either 1, 2, 3 or 4: ");
-        Console.WriteLine("1. What's the answer to the math question? ");
+        Console.WriteLine("Pick an option from the menu below. Select either 1, 2, or 3: ");
+        Console.WriteLine("1. Math Game ");
         Console.WriteLine("2. View your game history");
         Console.WriteLine("3. Press any key to exit...");
         
-        var option = Console.ReadLine();
+        var option = Console.ReadLine().Trim();
+        Console.Clear();
+        
         switch (option)
         {
             case "1":
@@ -29,14 +36,57 @@ void Menu()
 
 void MathOperationMenu()
 {
-    var signs = new[] {"*", "+", "-", "/"};
+    var signs = "+*-/";
     var sign = "";
     do
     {
         Console.WriteLine("Enter a math operation (+, -, *, or /): ");
         sign = Console.ReadLine().Trim();
     } while (!signs.Contains(sign));
-
+    
+    var difficulty = 4;
+    var isDifficultyValid = true;
+    do
+    {
+        Console.Clear();
+        Console.WriteLine("Pick a difficulty level. Select either 1, 2, 3 or 4: ");
+        Console.WriteLine("1. Easy");
+        Console.WriteLine("2. Medium");
+        Console.WriteLine("3. Hard");
+        Console.WriteLine("4. Random\n");
+        var input = Console.ReadLine().Trim();
+        isDifficultyValid = int.TryParse(input, out difficulty);
+    } while (!isDifficultyValid || difficulty < 1 || difficulty > 4);
+    
+    Console.Clear();
+    
+    switch (difficulty)
+    {
+        case 1:
+            minRange = 1;
+            maxRange = 30;
+            break;
+        case 2:
+            minRange = 30;
+            maxRange = 50;
+            break; 
+        case 3:
+            minRange = 50;
+            maxRange = 100;
+            break;
+        case 4:
+            minRange = 1;
+            maxRange = 100;
+            break;
+    }
+    
+    // There's a very small range of numbers for division when using the difficulty levels
+    if (sign == "/")
+    {
+        minRange = 1;
+        maxRange = 100;
+    }
+    
     MathOperation(sign);
 }
 
@@ -47,28 +97,19 @@ void MathOperation(string sign)
     switch (sign)
     {
         case "+":
-            do
-            {
-                firstNumber = random.Next();
-                secondNumber = random.Next();
-            } while ((long) firstNumber + (long) secondNumber >= int.MaxValue);
+            (firstNumber, secondNumber) = GenerateRandomNumbers();
             
             Console.WriteLine($"What is the result of this operation: {firstNumber} + {secondNumber}");
             EvalGameResult(result: firstNumber + secondNumber);
             break; 
         case "-":
-            firstNumber = random.Next();
-            secondNumber = random.Next(0, firstNumber); // minus operations will only result in positive integers
+            (firstNumber, secondNumber) = GenerateRandomNumbers();
             
             Console.WriteLine($"What is the result of this operation: {firstNumber} - {secondNumber}");
             EvalGameResult(result: firstNumber - secondNumber);
             break;
         case "*":
-            do
-            {
-                firstNumber = random.Next();
-                secondNumber = random.Next();
-            } while ((long) firstNumber * (long) secondNumber >= int.MaxValue);
+            (firstNumber, secondNumber) = GenerateRandomNumbers();
             
             Console.WriteLine($"What is the result of this operation: {firstNumber} * {secondNumber}");
             EvalGameResult(result: firstNumber * secondNumber);
@@ -76,15 +117,20 @@ void MathOperation(string sign)
         case "/":
             do
             {
-                firstNumber = random.Next(1, 100);
-                secondNumber = random.Next(1, firstNumber);
+                (firstNumber, secondNumber) = GenerateRandomNumbers();
             } while (firstNumber % secondNumber != 0);
             
             Console.WriteLine($"What is the result of this operation: {firstNumber} / {secondNumber}");
             EvalGameResult(result: firstNumber / secondNumber);
             break;
     }
-
+}
+(int, int) GenerateRandomNumbers()
+{
+    var firstNumber = random.Next(minRange, maxRange);
+    var secondNumber = random.Next(minRange, maxRange);
+    
+    return (firstNumber, secondNumber);
 }
 
 void PrintHistory()
@@ -95,27 +141,43 @@ void PrintHistory()
         Console.WriteLine("No history available.\n");
         return;
     }
-    
+
+    var wins = 0;
     for (var i = 0; i < history.Count; i++)
     {
         Console.WriteLine($"Round {i + 1}: {history[i]}\n");
+        if (history[i] == WON) wins++;
     }
+    Console.WriteLine($"Total Score: {wins}/{history.Count}\n");
 }
 
 void EvalGameResult(int result)
 {
-    var userAns = Console.ReadLine();
-    var isValidInt = int.TryParse(userAns, out var userResult);
-    if (!isValidInt || userResult != result)
+    var userAns = "";
+    var timer = new Stopwatch();
+    timer.Start();
+    
+    do
     {
-        Console.WriteLine($"Incorrect! The correct answer is {result}\n");
-        history.Add("Lost");
+        Console.WriteLine("Answer must be an integer: ");
+        userAns = Console.ReadLine().Trim();
+    } while (!int.TryParse(userAns, out _));
+    timer.Stop();
+   
+    
+    var userResult = int.Parse(userAns);
+    Console.Clear();
+    if (userResult != result)
+    {
+        Console.WriteLine($"Incorrect! The correct answer is {result}");
+        history.Add(LOST);
     }
     else
     {
-        Console.WriteLine($"CORRECT! You won this round!\n");
-        history.Add("Won");
+        Console.WriteLine($"CORRECT! You won this round!");
+        history.Add(WON);
     }
+    Console.WriteLine($"Time Elapsed: {timer.Elapsed}\n");
 }
 
 Menu();
