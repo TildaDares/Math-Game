@@ -15,7 +15,7 @@ void Menu()
         Console.WriteLine("Pick an option from the menu below. Select either 1, 2, or 3: ");
         Console.WriteLine("1. Math Game ");
         Console.WriteLine("2. View your game history");
-        Console.WriteLine("3. Press any key to exit...");
+        Console.WriteLine("3. Press any key and enter to exit...");
         
         var option = Console.ReadLine().Trim();
         Console.Clear();
@@ -42,7 +42,7 @@ void MathOperationMenu()
     {
         Console.WriteLine("Enter a math operation (+, -, *, or /): ");
         sign = Console.ReadLine().Trim();
-    } while (!signs.Contains(sign));
+    } while (!signs.Contains(sign) || sign == "");
     
     var difficulty = 4;
     var isDifficultyValid = true;
